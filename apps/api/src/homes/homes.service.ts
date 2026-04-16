@@ -57,4 +57,23 @@ export class HomesService {
 
     return overlappingBookings === 0;
   }
+
+  async getCalendarData() {
+    return this.prisma.home.findMany({
+      where: { status: 'publish' },
+      include: {
+        bookings: {
+          select: {
+            id: true,
+            startDate: true,
+            endDate: true,
+            status: true,
+            total: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+  }
 }

@@ -1,21 +1,40 @@
-'use client';
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import api from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 export default function DashboardPage() {
-  const stats = [
-    { label: 'Total Earnings', value: '$12,450', change: '+12%' },
-    { label: 'Active Bookings', value: '18', change: '+5' },
-    { label: 'Total Properties', value: '4', change: '0' },
-    { label: 'Avg. Rating', value: '4.95', change: '+0.1' },
-  ];
+  const { user } = useAuth();
+  const [statsData, setStatsData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const { data } = await api.get('/stats/admin');
+        setStatsData(data);
+      } catch (err) {
+        console.error('Failed to fetch stats', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const stats = statsData ? [
+    { label: 'Total Earnings', value: `$${statsData.totalEarnings.toLocaleString()}`, change: '+12%' },
+    { label: 'Active Bookings', value: statsData.activeBookings.toString(), change: '+5' },
+    { label: 'Total Suites', value: statsData.totalProperties.toString(), change: '0' },
+    { label: 'Occupancy Rate', value: `${statsData.occupancyRate}%`, change: '+2%' },
+  ] : [];
 
   const recentBookings = [
     { guest: 'John Doe', property: 'Presidential Suite', dates: 'Oct 24 - 29', status: 'Confirmed', total: '$1,750' },
     { guest: 'Jane Smith', property: 'Riverside Cabin', dates: 'Nov 02 - 05', status: 'Pending', total: '$840' },
     { guest: 'Carlos Ruiz', property: 'Mountain View', dates: 'Nov 12 - 15', status: 'Confirmed', total: '$960' },
   ];
+
 
   return (
     <div className="animate-in" style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
@@ -35,11 +54,36 @@ export default function DashboardPage() {
       <main style={{ flex: 1, padding: '3rem' }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
           <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Welcome back, Partner</h1>
+            <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Welcome back, {user?.firstName || 'Partner'}</h1>
             <p style={{ color: 'var(--secondary)' }}>Here is what is happening with your properties today.</p>
           </div>
-          <button className="btn-primary">+ Add New Property</button>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <Link href="/dashboard/calendar" className="btn-secondary">View Timeline</Link>
+            <button className="btn-primary">+ Add New Property</button>
+          </div>
         </header>
+
+        {/* Daily Brief / Urgency Alerts */}
+        <div className="glass" style={{ 
+          padding: '1.5rem 2rem', 
+          borderRadius: '16px', 
+          marginBottom: '3rem', 
+          background: '#fffbeb', 
+          border: '1px solid #fde68a',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ background: '#f59e0b', color: 'white', padding: '0.5rem', borderRadius: '8px', fontSize: '1.2rem' }}>⚡</div>
+            <div>
+              <p style={{ fontWeight: 800, color: '#92400e' }}>Action Required</p>
+              <p style={{ fontSize: '0.9rem', color: '#b45309' }}>You have 2 bookings pending confirmation for this weekend.</p>
+            </div>
+          </div>
+          <Link href="/dashboard/bookings" style={{ fontSize: '0.85rem', fontWeight: 700, color: '#b45309', textDecoration: 'underline' }}>Manage Now</Link>
+        </div>
+
 
         {/* Stats Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '4rem' }}>

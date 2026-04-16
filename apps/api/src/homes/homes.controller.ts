@@ -53,4 +53,12 @@ export class HomesController {
   ) {
     return this.homesService.checkAvailability(+id, new Date(start), new Date(end));
   }
+
+  @Get('calendar/data')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'partner')
+  async getCalendarData() {
+    return this.homesService.getCalendarData();
+  }
 }
+
