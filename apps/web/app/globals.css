@@ -1,17 +1,20 @@
 :root {
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
+  --primary: #2EC4B6; /* Light Sea Green */
+  --primary-hover: #26a69a;
   --secondary: #64748b;
-  --accent: #f59e0b;
+  --accent: #FF9F1C; /* Orange Peel */
+  --dominant: #CBF3F0; /* Mint Green */
   --background: #ffffff;
-  --foreground: #0f172a;
+  --foreground: #022b3a; /* Darker navy for text contrast */
   
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #022b3a;
   
   --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #2563eb;
+  --ring: #2EC4B6;
+
+
   
   --radius: 0.75rem;
   --glass: rgba(255, 255, 255, 0.7);

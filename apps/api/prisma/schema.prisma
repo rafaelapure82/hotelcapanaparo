@@ -17,6 +17,7 @@ model User {
   firstName            String?
   lastName             String?
   avatar               Int?
+  avatarUrl           String?   @db.Text
   mobile               String?   @db.VarChar(30)
   location             String?   @db.VarChar(10)
   description          String?   @db.Text
@@ -30,7 +31,10 @@ model User {
   homes                Home[]    @relation("UserHomes")
   bookings             Booking[] @relation("UserBookings")
   reviews              Review[]
+  sentMessages         Message[] @relation("SentMessages")
+  receivedMessages     Message[] @relation("ReceivedMessages")
 }
+
 
 model Role {
   id          Int      @id @default(autoincrement())
@@ -70,8 +74,11 @@ model Home {
   amenities         String?
   homeType          String?
   status            String    @default("publish")
+  isFeatured        Boolean   @default(false)
+  viewCount         Int       @default(0)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+
 
   author            User      @relation("UserHomes", fields: [authorId], references: [id])
   bookings          Booking[] @relation("HomeBookings")
@@ -92,12 +99,16 @@ model Booking {
   ownerId         Int
   paymentType     String   @db.VarChar(50)
   checkoutData    String?  @db.Text
+  paymentProofUrl String?  @db.Text
   tokenCode       String?  @db.VarChar(255)
   currency        String   @db.VarChar(10)
   startDate       DateTime
   endDate         DateTime
+  numberOfGuests  Int      @default(1)
+  platform        String?  @default("Direct") // e.g., Direct, Booking.com
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
 
   buyer           User     @relation("UserBookings", fields: [buyerId], references: [id])
   home            Home?    @relation("HomeBookings", fields: [serviceId], references: [id])
@@ -117,3 +128,31 @@ model Review {
 
   user      User     @relation(fields: [userId], references: [id])
 }
+
+model SystemSetting {
+  key   String @id
+  value String
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  senderId  Int
+  receiverId Int
+  bookingId Int?
+  createdAt DateTime @default(now())
+
+  sender    User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver  User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+
+model InventoryRecord {
+  id          Int      @id @default(autoincrement())
+  item        String   @db.VarChar(100)
+  quantity    Int      @default(0)
+  status      String   @default("ok") // ok, low, out
+  homeId      Int?
+  updatedAt   DateTime @updatedAt
+}
+
+

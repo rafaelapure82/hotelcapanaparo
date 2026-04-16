@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: capanaparo_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: 5.Cameron
     ports:
       - "5433:5432"
 

@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, UseGuards, Request, Header, Query } from '@nestjs/common';
 import { StatsService } from './stats.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -19,5 +19,14 @@ export class StatsController {
   @Roles('guest', 'admin')
   async getGuestStats(@Request() req: any) {
     return this.statsService.getGuestStats(req.user.userId);
+  }
+
+  @Get('export-revenue')
+  @Header('Content-Type', 'text/csv')
+  @Header('Content-Disposition', 'attachment; filename="reporte_ingresos.csv"')
+  async exportRevenue(@Query('year') year: string, @Query('month') month: string) {
+    const y = year ? parseInt(year) : new Date().getFullYear();
+    const m = month ? parseInt(month) : new Date().getMonth() + 1;
+    return this.statsService.getMonthlyRevenueReport(y, m);
   }
 }

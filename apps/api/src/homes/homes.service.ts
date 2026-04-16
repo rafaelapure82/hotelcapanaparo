@@ -40,9 +40,10 @@ export class HomesService {
     return this.prisma.home.delete({ where: { id } });
   }
 
-  async checkAvailability(homeId: number, startDate: Date, endDate: Date): Promise<boolean> {
+  async checkAvailability(homeId: number, startDate: Date, endDate: Date, excludeBookingId?: number): Promise<boolean> {
     const overlappingBookings = await this.prisma.booking.count({
       where: {
+        id: excludeBookingId ? { not: excludeBookingId } : undefined,
         serviceId: homeId,
         serviceType: 'home',
         status: { notIn: ['cancelled', 'rejected'] },

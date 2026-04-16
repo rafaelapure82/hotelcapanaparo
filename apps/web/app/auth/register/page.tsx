@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import Link from 'next/link';
 
 export default function RegisterPage() {
@@ -13,6 +14,7 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState('');
   const { register } = useAuth();
+  const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,8 +45,8 @@ export default function RegisterPage() {
         border: '1px solid var(--border)'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>Join the Suites</h1>
-          <p style={{ color: 'var(--secondary)' }}>Experience luxury at Hotel Capanaparo</p>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>{t('registerTitle')}</h1>
+          <p style={{ color: 'var(--secondary)' }}>{t('heroSubtitle').split('.')[0]}</p>
         </div>
 
         {error && (
@@ -64,7 +66,7 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="input-group">
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', marginLeft: '0.5rem' }}>FIRST NAME</label>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', marginLeft: '0.5rem' }}>{t('firstName').toUpperCase()}</label>
               <input 
                 name="firstName"
                 placeholder="John"
@@ -80,7 +82,7 @@ export default function RegisterPage() {
               />
             </div>
             <div className="input-group">
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', marginLeft: '0.5rem' }}>LAST NAME</label>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', marginLeft: '0.5rem' }}>{t('lastName').toUpperCase()}</label>
               <input 
                 name="lastName"
                 placeholder="Doe"
@@ -98,7 +100,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="input-group">
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', marginLeft: '0.5rem' }}>EMAIL ADDRESS</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', marginLeft: '0.5rem' }}>{t('email').toUpperCase()}</label>
             <input 
               name="email"
               type="email" 
@@ -116,11 +118,11 @@ export default function RegisterPage() {
           </div>
 
           <div className="input-group">
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', marginLeft: '0.5rem' }}>PASSWORD</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', marginLeft: '0.5rem' }}>{t('password').toUpperCase()}</label>
             <input 
               name="password"
               type="password" 
-              placeholder="Create a strong password"
+              placeholder="••••••••"
               onChange={handleChange}
               required
               style={{
@@ -139,12 +141,12 @@ export default function RegisterPage() {
             letterSpacing: '1px',
             marginTop: '1rem'
           }}>
-            CREATE ACCOUNT
+            {t('createAccount').toUpperCase()}
           </button>
         </form>
 
         <p style={{ textAlign: 'center', marginTop: '2.5rem', color: 'var(--secondary)', fontSize: '0.9rem' }}>
-          Already have an account? <Link href="/auth/login" style={{ color: 'var(--primary)', fontWeight: 700 }}>Log in</Link>
+          {t('alreadyHaveAccount')} <Link href="/auth/login" style={{ color: 'var(--primary)', fontWeight: 700 }}>{t('signIn')}</Link>
         </p>
       </div>
     </div>

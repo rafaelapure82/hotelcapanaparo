@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function CalendarPage() {
+  const { t, formatDate, language } = useLanguage();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,13 +43,13 @@ export default function CalendarPage() {
     });
   };
 
-  if (loading) return <div style={{ padding: '4rem', textAlign: 'center' }}>Loading Inventory Timeline...</div>;
+  if (loading) return <div style={{ padding: '4rem', textAlign: 'center' }}>{t('loading')}</div>;
 
   return (
     <div className="animate-in" style={{ padding: '3rem', minHeight: '100vh', background: '#f8fafc' }}>
       <header style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Inventory Timeline</h1>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>{t('viewTimeline')}</h1>
           <p style={{ color: 'var(--secondary)' }}>Real-time availability and booking overview.</p>
         </div>
         <Link href="/dashboard" className="btn-secondary" style={{ padding: '0.6rem 1.2rem' }}>Back to Stats</Link>
@@ -62,10 +64,10 @@ export default function CalendarPage() {
         <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '4px' }}>
           <thead>
             <tr>
-              <th style={{ minWidth: '200px', textAlign: 'left', padding: '1rem', color: 'var(--secondary)', fontSize: '0.8rem' }}>SUITE</th>
+              <th style={{ minWidth: '200px', textAlign: 'left', padding: '1rem', color: 'var(--secondary)', fontSize: '0.8rem' }}>{t('property')}</th>
               {days.map((day, i) => (
                 <th key={i} style={{ minWidth: '80px', padding: '1rem', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.6 }}>{day.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.6 }}>{day.toLocaleDateString(language, { weekday: 'short' })}</div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>{day.getDate()}</div>
                 </th>
               ))}

@@ -1,84 +1,170 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Hero from "./components/Hero";
-import HomeCard from "./components/HomeCard";
+import HomeCardPremium from "./components/HomeCardPremium";
+
+import SuiteDetailModal from "./components/SuiteDetailModal";
+import api from '@/lib/api';
+import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function Home() {
-  const featuredHomes = [
-    { title: "Azure Coast Villa", location: "Santorini, Greece", price: 450, rating: 4.9 },
-    { title: "Midnight Chalet", location: "Zermatt, Switzerland", price: 720, rating: 5.0 },
-    { title: "Emerald Bamboo Farm", location: "Bali, Indonesia", price: 280, rating: 4.8 },
-    { title: "Skyline Penthouse", location: "New York, USA", price: 1200, rating: 4.9 },
-  ];
+  const { t } = useLanguage();
+  const [featuredHomes, setFeaturedHomes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedSuite, setSelectedSuite] = useState<any>(null);
+
+
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        // Fetch properties sorted by viewCount (Popularity)
+        const { data } = await api.get('/homes', { 
+          params: { orderBy: 'popular', take: 3 } 
+        });
+        setFeaturedHomes(data);
+      } catch (err) {
+        console.error('Failed to fetch featured homes', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFeatured();
+  }, []);
 
   return (
-    <div className="animate-in">
+    <div className="animate-in" style={{ background: 'white' }}>
       <Hero />
       
+      {/* Featured / Most Visited Section */}
       <section style={{ 
-        padding: '4rem 2rem', 
-        maxWidth: '1200px', 
+        padding: '6rem 2rem', 
+        maxWidth: '1300px', 
         margin: '0 auto' 
       }}>
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
-          alignItems: 'flex-end',
-          marginBottom: '2rem'
+          alignItems: 'baseline',
+          marginBottom: '3rem'
         }}>
           <div>
-            <h2 style={{ fontSize: '2rem', fontWeight: 800 }}>Explore Featured Stays</h2>
-            <p style={{ color: 'var(--secondary)' }}>Handpicked properties with exceptional style and comfort.</p>
+            <span style={{ 
+              color: 'var(--primary)', 
+              fontWeight: 800, 
+              fontSize: '0.9rem', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.1em',
+              display: 'block',
+              marginBottom: '0.5rem'
+            }}>
+              {t('featured')} Selection
+            </span>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--foreground)', letterSpacing: '-0.03em' }}>
+              {t('popularity')} en Capanaparo
+            </h2>
+            <p style={{ color: 'var(--secondary)', fontSize: '1.1rem', marginTop: '0.5rem' }}>
+              Descubre las suites más reservadas y valoradas por nuestros huéspedes globales.
+            </p>
           </div>
-          <a href="/homes" style={{ color: 'var(--primary)', fontWeight: 600 }}>View all →</a>
+          <Link href="/homes" style={{ 
+            color: 'var(--primary)', 
+            fontWeight: 700, 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.5rem',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '12px',
+            background: 'var(--dominant)',
+            fontSize: '0.95rem'
+          }}>
+            Ver todas las suites ({featuredHomes.length}) →
+          </Link>
+
         </div>
 
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-          gap: '2rem' 
-        }}>
-          {featuredHomes.map((home, index) => (
-            <HomeCard 
-              key={index} 
-              title={home.title} 
-              location={home.location} 
-              price={home.price} 
-              rating={home.rating} 
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2.5rem' }}>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} style={{ height: '400px', borderRadius: '24px', background: '#f1f5f9', animation: 'pulse 1.5s infinite' }}></div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
+            gap: '2.5rem' 
+          }}>
+            {featuredHomes.map((home) => (
+              <HomeCardPremium 
+                key={home.id}
+                id={home.id}
+                title={home.title} 
+                location={`${home.city}, ${home.country}`} 
+                price={home.basePrice} 
+                image={home.gallery?.split(',')[0]}
+                isFeatured={home.isFeatured}
+                viewCount={home.viewCount}
+                amenities={home.amenities}
+                description={home.description}
+                country={home.country}
+                onView={() => setSelectedSuite(home)}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
-      {/* Trust / Features Section */}
+      {/* Suite Detail Modal */}
+      {selectedSuite && (
+        <SuiteDetailModal 
+          suite={selectedSuite} 
+          onClose={() => setSelectedSuite(null)} 
+        />
+      )}
+
+
+      {/* Trust / Features Section con los nuevos colores */}
       <section style={{ 
-        padding: '6rem 2rem', 
-        backgroundColor: '#f8fafc',
-        textAlign: 'center'
+        padding: '8rem 2rem', 
+        backgroundColor: 'var(--dominant)',
+        borderRadius: '60px 60px 0 0',
+        marginTop: '4rem'
       }}>
-        <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '4rem' }}>Why choose AweBooking?</h2>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-          gap: '4rem',
-          maxWidth: '1200px',
-          margin: '0 auto'
-        }}>
-          <div>
-            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🛡️</div>
-            <h3 style={{ marginBottom: '1rem' }}>Premium Security</h3>
-            <p style={{ color: 'var(--secondary)' }}>Verified properties and secure payments for columns peace of mind.</p>
-          </div>
-          <div>
-            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>✨</div>
-            <h3 style={{ marginBottom: '1rem' }}>Unique Experiences</h3>
-            <p style={{ color: 'var(--secondary)' }}>Beyond just a place to sleep—stay in homes with character.</p>
-          </div>
-          <div>
-            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🤝</div>
-            <h3 style={{ marginBottom: '1rem' }}>Host Support</h3>
-            <p style={{ color: 'var(--secondary)' }}>Dedicated assistance for both travelers and property owners.</p>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '5rem', color: 'var(--foreground)' }}>¿Por qué Hotel Capanaparo?</h2>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+            gap: '4rem'
+          }}>
+            <div className="glass" style={{ padding: '3rem', borderRadius: '32px', border: 'none', background: 'white' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1.5rem', filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.1))' }}>🛡️</div>
+              <h3 style={{ marginBottom: '1rem', fontWeight: 800 }}>Seguridad Premium</h3>
+              <p style={{ color: 'var(--secondary)', lineHeight: 1.6 }}>Propiedades verificadas y pagos protegidos para tu total tranquilidad.</p>
+            </div>
+            <div className="glass" style={{ padding: '3rem', borderRadius: '32px', border: 'none', background: 'white' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1.5rem', filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.1))' }}>✨</div>
+              <h3 style={{ marginBottom: '1rem', fontWeight: 800 }}>Experiencias Únicas</h3>
+              <p style={{ color: 'var(--secondary)', lineHeight: 1.6 }}>Más que una cama: habitaciones con historia y carácter inigualable.</p>
+            </div>
+            <div className="glass" style={{ padding: '3rem', borderRadius: '32px', border: 'none', background: 'white' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1.5rem', filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.1))' }}>🤝</div>
+              <h3 style={{ marginBottom: '1rem', fontWeight: 800 }}>Atención 24/7</h3>
+              <p style={{ color: 'var(--secondary)', lineHeight: 1.6 }}>Soporte dedicado para que tu estancia sea perfecta de principio a fin.</p>
+            </div>
           </div>
         </div>
       </section>
+
+      <style jsx>{`
+        @keyframes pulse {
+          0% { opacity: 0.6; }
+          50% { opacity: 1; }
+          100% { opacity: 0.6; }
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,8 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function Hero() {
+  const { t } = useLanguage();
+  const router = useRouter();
+  const [city, setCity] = useState('');
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (city) params.set('city', city);
+    router.push(`/homes?${params.toString()}`);
+  };
+
   return (
     <section className="animate-in" style={{
       padding: '4rem 2rem 8rem',
@@ -20,7 +32,7 @@ export default function Hero() {
         maxWidth: '900px',
         lineHeight: 1.1
       }}>
-        Welcome to <span style={{ color: 'var(--primary)' }}>Hotel Capanaparo</span> Suites.
+        {t('welcome')} <span style={{ color: 'var(--primary)' }}>Hotel Capanaparo</span> {t('heroTitle').replace('Hotel Capanaparo ', '')}.
       </h1>
       
       <p style={{ 
@@ -29,7 +41,7 @@ export default function Hero() {
         maxWidth: '600px',
         margin: '0 auto'
       }}>
-        Experience the world's most unique properties, curated for travelers who seek the exceptional.
+        {t('heroSubtitle')}
       </p>
 
       {/* Modern Search Bar */}
@@ -44,22 +56,33 @@ export default function Hero() {
         boxShadow: 'var(--shadow-lg)'
       }}>
         <div style={{ flex: 2, textAlign: 'left', padding: '0 1.5rem', borderRight: '1px solid var(--border)' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--secondary)' }}>Location</label>
-          <input type="text" placeholder="Where are you going?" style={{ border: 'none', background: 'transparent', width: '100%', outline: 'none', fontSize: '1rem' }} />
+          <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--secondary)' }}>{t('searchLocation')}</label>
+          <input 
+            type="text" 
+            placeholder="Where are you going?" 
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            style={{ border: 'none', background: 'transparent', width: '100%', outline: 'none', fontSize: '1rem' }} 
+          />
         </div>
         
         <div style={{ flex: 1, textAlign: 'left', padding: '0 1.5rem', borderRight: '1px solid var(--border)' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--secondary)' }}>Check-in</label>
+          <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--secondary)' }}>{t('searchDates')}</label>
           <input type="text" placeholder="Add dates" style={{ border: 'none', background: 'transparent', width: '100%', outline: 'none', fontSize: '1rem' }} />
         </div>
         
         <div style={{ flex: 1, textAlign: 'left', padding: '0 1.5rem' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--secondary)' }}>Guests</label>
+          <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--secondary)' }}>{t('searchGuests')}</label>
           <input type="text" placeholder="Add guests" style={{ border: 'none', background: 'transparent', width: '100%', outline: 'none', fontSize: '1rem' }} />
         </div>
 
-        <button className="btn-primary" style={{ borderRadius: '50px', padding: '1rem 2rem' }}>
-          Search
+        <button 
+          onClick={handleSearch}
+          className="btn-primary" 
+          style={{ borderRadius: '50px', padding: '1rem 2rem' }}
+        >
+          {t('searchBtn')}
         </button>
       </div>
 

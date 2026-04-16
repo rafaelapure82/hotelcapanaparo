@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -9,6 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { login } = useAuth();
+  const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +37,8 @@ export default function LoginPage() {
         border: '1px solid var(--border)'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>Welcome Back</h1>
-          <p style={{ color: 'var(--secondary)' }}>Enter your credentials to access your account</p>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>{t('loginWelcome')}</h1>
+          <p style={{ color: 'var(--secondary)' }}>{t('heroSubtitle').split('.')[0]}</p>
         </div>
 
         {error && (
@@ -55,7 +57,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div className="input-group">
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', marginLeft: '0.5rem' }}>EMAIL ADDRESS</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', marginLeft: '0.5rem' }}>{t('email').toUpperCase()}</label>
             <input 
               type="email" 
               placeholder="name@example.com"
@@ -74,7 +76,7 @@ export default function LoginPage() {
           </div>
 
           <div className="input-group">
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', marginLeft: '0.5rem' }}>PASSWORD</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', marginLeft: '0.5rem' }}>{t('password').toUpperCase()}</label>
             <input 
               type="password" 
               placeholder="••••••••"
@@ -98,12 +100,12 @@ export default function LoginPage() {
             letterSpacing: '1px',
             marginTop: '1rem'
           }}>
-            LOG IN
+            {t('signIn').toUpperCase()}
           </button>
         </form>
 
         <p style={{ textAlign: 'center', marginTop: '2.5rem', color: 'var(--secondary)', fontSize: '0.9rem' }}>
-          Don't have an account? <Link href="/auth/register" style={{ color: 'var(--primary)', fontWeight: 700 }}>Sign up</Link>
+          {t('dontHaveAccount')} <Link href="/auth/register" style={{ color: 'var(--primary)', fontWeight: 700 }}>{t('createAccount')}</Link>
         </p>
       </div>
     </div>

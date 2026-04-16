@@ -15,8 +15,12 @@ export class BookingsService {
     startDate: Date;
     endDate: Date;
     buyerId: number;
-    numberOfGuest: number;
-    // ... other fields
+    numberOfGuests: number;
+    paymentProofUrl?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
   }): Promise<Booking> {
     const isAvailable = await this.homesService.checkAvailability(
       data.serviceId,
@@ -33,7 +37,7 @@ export class BookingsService {
 
     // Calculate nights
     const diffTime = Math.abs(data.endDate.getTime() - data.startDate.getTime());
-    const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
     
     const total = (home.basePrice || 0) * nights;
 
@@ -44,24 +48,43 @@ export class BookingsService {
         startDate: data.startDate,
         endDate: data.endDate,
         total: total,
-        status: 'pending',
-        firstName: '', // These would come from a DTO
-        lastName: '',
-        email: '',
-        phone: '',
+        status: data.paymentProofUrl ? 'processing' : 'pending',
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        email: data.email || '',
+        phone: data.phone || '',
         buyerId: data.buyerId,
         ownerId: home.authorId,
         currency: 'USD',
-        paymentType: 'none',
+        paymentType: 'transfer',
+        paymentProofUrl: data.paymentProofUrl,
+        numberOfGuests: data.numberOfGuests || 1,
       },
     });
   }
+
 
   async findAll(where: Prisma.BookingWhereInput): Promise<Booking[]> {
     return this.prisma.booking.findMany({ where, include: { home: true } });
   }
 
   async updateStatus(id: number, status: string): Promise<Booking> {
+    if (status === 'confirmed') {
+      const booking = await this.prisma.booking.findUnique({ where: { id } });
+      if (!booking) throw new BadRequestException('Booking not found');
+      
+      const isAvailable = await this.homesService.checkAvailability(
+        booking.serviceId,
+        booking.startDate,
+        booking.endDate,
+        booking.id // Exclude self
+      );
+
+      if (!isAvailable) {
+        throw new BadRequestException('Property is no longer available for these dates');
+      }
+    }
+
     return this.prisma.booking.update({
       where: { id },
       data: { status },

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Home" ADD COLUMN     "isFeatured" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "viewCount" INTEGER NOT NULL DEFAULT 0;
