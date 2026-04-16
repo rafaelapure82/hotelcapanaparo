@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    Int       @id @default(autoincrement())
+  email                 String    @unique
+  password              String
+  firstName            String?
+  lastName             String?
+  avatar               Int?
+  mobile               String?   @db.VarChar(30)
+  location             String?   @db.VarChar(10)
+  description          String?   @db.Text
+  permissions          String?   @db.Text
+  lastLogin            DateTime?
+  lastCheckNotification BigInt?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  roles                Role[]    @relation("UserRoles")
+  homes                Home[]    @relation("UserHomes")
+  bookings             Booking[] @relation("UserBookings")
+  reviews              Review[]
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  name        String
+  permissions String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]   @relation("UserRoles")
+}
+
+model Home {
+  id                Int       @id @default(autoincrement())
+  slug              String    @unique
+  title             String
+  content           String?   @db.Text
+  description       String?   @db.Text
+  authorId          Int
+  locationLat       Float?
+  locationLng       Float?
+  address           String?
+  city              String?   @db.VarChar(50)
+  country           String?   @db.VarChar(50)
+  postcode          String?   @db.VarChar(15)
+  gallery           String?
+  thumbnailId       String?
+  numberOfGuest     Int?
+  numberOfBedrooms   Int?
+  numberOfBathrooms  Int?
+  size              Float?
+  minStay           Int?
+  maxStay           Int?
+  bookingType       String?   @db.VarChar(20)
+  basePrice         Float?
+  weekendPrice      Float?
+  amenities         String?
+  homeType          String?
+  status            String    @default("publish")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  author            User      @relation("UserHomes", fields: [authorId], references: [id])
+  bookings          Booking[] @relation("HomeBookings")
+}
+
+model Booking {
+  id              Int      @id @default(autoincrement())
+  serviceId       Int
+  serviceType     String   @default("home") // e.g., home, experience, car
+  total           Float
+  status          String   @db.VarChar(50)
+  firstName       String   @db.VarChar(100)
+  lastName        String   @db.VarChar(100)
+  email           String   @db.VarChar(100)
+  phone           String   @db.VarChar(50)
+  address         String?  @db.VarChar(255)
+  buyerId         Int
+  ownerId         Int
+  paymentType     String   @db.VarChar(50)
+  checkoutData    String?  @db.Text
+  tokenCode       String?  @db.VarChar(255)
+  currency        String   @db.VarChar(10)
+  startDate       DateTime
+  endDate         DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  buyer           User     @relation("UserBookings", fields: [buyerId], references: [id])
+  home            Home?    @relation("HomeBookings", fields: [serviceId], references: [id])
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  serviceId Int
+  serviceType String
+  userId    Int
+  title     String?
+  content   String   @db.Text
+  rating    Float
+  status    String   @default("approved")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id])
+}
