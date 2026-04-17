@@ -2,12 +2,16 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { HomesService } from '../homes/homes.service';
 import { Booking, Prisma } from '@prisma/client';
+import { InvoicesService } from '../invoices/invoices.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class BookingsService {
   constructor(
     private prisma: PrismaService,
     private homesService: HomesService,
+    private invoicesService: InvoicesService,
+    private mailService: MailService,
   ) {}
 
   async create(data: {
@@ -85,9 +89,30 @@ export class BookingsService {
       }
     }
 
-    return this.prisma.booking.update({
+    const updatedBooking = await this.prisma.booking.update({
       where: { id },
       data: { status },
+      include: { home: true }
     });
+
+    // Automation: Generate Invoice and Send Email
+    if (status === 'confirmed') {
+      try {
+        const invoice = await this.invoicesService.createFromBooking(id);
+        const pdfBuffer = await this.invoicesService.generatePDFBuffer(updatedBooking, invoice);
+        await this.mailService.sendInvoiceEmail(
+          updatedBooking.email, 
+          updatedBooking.firstName, 
+          invoice.number, 
+          pdfBuffer
+        );
+      } catch (err) {
+        console.error('Automation Failed:', err);
+        // We don't throw here to avoid rollback of the status update, 
+        // but we log it for admin review.
+      }
+    }
+
+    return updatedBooking;
   }
 }

@@ -10,17 +10,22 @@ interface Message {
   senderId: number;
   receiverId: number;
   bookingId?: number;
+  isRead: boolean;
+  attachmentUrl?: string;
   createdAt: string;
-  sender: { firstName: string; avatar?: string };
+  sender: { firstName: string; avatarUrl?: string };
 }
 
 interface ChatContextType {
   socket: Socket | null;
   messages: Message[];
-  sendMessage: (receiverId: number, content: string, bookingId?: number) => void;
+  sendMessage: (receiverId: number, content: string, bookingId?: number, attachmentUrl?: string) => void;
+  sendTyping: (receiverId: number, isTyping: boolean) => void;
   joinChat: (userId: number) => void;
   loadHistory: (bookingId: number) => Promise<void>;
+  markAsRead: (fromUserId: number) => Promise<void>;
   clearMessages: () => void;
+  typingUsers: Set<number>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -28,6 +33,8 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [typingUsers, setTypingUsers] = useState<Set<number>>(new Set());
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   const loadHistory = async (bookingId: number) => {
     try {
@@ -38,11 +45,23 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const markAsRead = async (fromUserId: number) => {
+    if (!currentUserId) return;
+    try {
+      await api.post('/chat/read', { userId: currentUserId, fromUserId });
+    } catch (err) {
+      console.error('Failed to mark as read', err);
+    }
+  };
+
   const clearMessages = () => setMessages([]);
 
   const joinChat = (userId: number) => {
-    if (socket) return;
-    const newSocket = io('http://localhost:3000', {
+    if (socket && currentUserId === userId) return;
+    setCurrentUserId(userId);
+    
+    // In dev, use localhost:3000
+    const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000', {
       query: { userId: userId.toString() }
     });
 
@@ -57,16 +76,36 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       });
     });
 
+    newSocket.on('user_typing', (data: { userId: number, isTyping: boolean }) => {
+      setTypingUsers(prev => {
+        const next = new Set(prev);
+        if (data.isTyping) next.add(data.userId);
+        else next.delete(data.userId);
+        return next;
+      });
+    });
+
     setSocket(newSocket);
   };
 
-  const sendMessage = (receiverId: number, content: string, bookingId?: number) => {
-    if (socket) {
+  const sendMessage = (receiverId: number, content: string, bookingId?: number, attachmentUrl?: string) => {
+    if (socket && currentUserId) {
       socket.emit('send_message', {
-        senderId: parseInt(socket.io.opts.query?.userId as string),
+        senderId: currentUserId,
         receiverId,
         content,
-        bookingId
+        bookingId,
+        attachmentUrl
+      });
+    }
+  };
+
+  const sendTyping = (receiverId: number, isTyping: boolean) => {
+    if (socket && currentUserId) {
+      socket.emit('typing', {
+        senderId: currentUserId,
+        receiverId,
+        isTyping
       });
     }
   };
@@ -78,7 +117,17 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }, [socket]);
 
   return (
-    <ChatContext.Provider value={{ socket, messages, sendMessage, joinChat, loadHistory, clearMessages }}>
+    <ChatContext.Provider value={{ 
+      socket, 
+      messages, 
+      sendMessage, 
+      sendTyping, 
+      joinChat, 
+      loadHistory, 
+      markAsRead, 
+      clearMessages,
+      typingUsers
+    }}>
       {children}
     </ChatContext.Provider>
   );

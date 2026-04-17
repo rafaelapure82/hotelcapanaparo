@@ -33,6 +33,8 @@ const translations: Translations = {
   overview: { es: 'Vista General', en: 'Overview', it: 'Panoramica', pt: 'Visão Geral', fr: 'Aperçu', de: 'Übersicht' },
   myProperties: { es: 'Mis Propiedades', en: 'My Properties', it: 'Le Mie Proprietà', pt: 'Minhas Propriedades', fr: 'Mes Propriétés', de: 'Meine Immobilien' },
   bookings: { es: 'Reservas', en: 'Bookings', it: 'Prenotazioni', pt: 'Reservas', fr: 'Réservations', de: 'Buchungen' },
+  messages: { es: 'Mensajes', en: 'Messages', it: 'Messaggi', pt: 'Mensagens', fr: 'Messages', de: 'Nachrichten' },
+  inventory: { es: 'Inventario', en: 'Inventory', it: 'Inventario', pt: 'Inventário', fr: 'Inventaire', de: 'Inventar' },
   earnings: { es: 'Ingresos', en: 'Earnings', it: 'Guadagni', pt: 'Ganhos', fr: 'Gains', de: 'Einnahmen' },
   settings: { es: 'Configuración', en: 'Settings', it: 'Impostazioni', pt: 'Configurações', fr: 'Paramètres', de: 'Einstellungen' },
   

@@ -37,7 +37,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('send_message')
   async handleMessage(
-    @MessageBody() data: { senderId: number; receiverId: number; content: string; bookingId?: number },
+    @MessageBody() data: { senderId: number; receiverId: number; content: string; bookingId?: number; attachmentUrl?: string },
     @ConnectedSocket() client: Socket,
   ) {
     // 1. Save message to DB
@@ -47,18 +47,27 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         senderId: data.senderId,
         receiverId: data.receiverId,
         bookingId: data.bookingId,
+        attachmentUrl: data.attachmentUrl,
       },
       include: {
-        sender: { select: { firstName: true, avatar: true } },
+        sender: { select: { id: true, firstName: true, avatar: true, avatarUrl: true } },
       }
     });
 
     // 2. Emit to receiver
     this.server.to(`user-${data.receiverId}`).emit('new_message', message);
     
-    // 3. Emit back to sender (for multi-device sync or just confirmation)
+    // 3. Emit back to sender
     this.server.to(`user-${data.senderId}`).emit('new_message', message);
 
     return message;
+  }
+
+  @SubscribeMessage('typing')
+  handleTyping(@MessageBody() data: { senderId: number; receiverId: number; isTyping: boolean }) {
+    this.server.to(`user-${data.receiverId}`).emit('user_typing', {
+      userId: data.senderId,
+      isTyping: data.isTyping
+    });
   }
 }

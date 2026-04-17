@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import api from '@/lib/api';
-import { generateInvoicePDF, generateInventoryReport } from '@/lib/reports';
 import ChatModal from '@/components/ChatModal';
 import { useAuth } from '@/context/AuthContext';
 
@@ -126,7 +125,10 @@ export default function DashboardPage() {
             </div>
             <div style={{ display: 'flex', gap: '0.8rem' }}>
               <button 
-                onClick={() => generateInventoryReport(properties)}
+                onClick={async () => {
+                  const { generateInventoryReport } = await import('@/lib/reports');
+                  generateInventoryReport(properties);
+                }}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--dominant)', color: 'var(--primary)', border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: '0.75rem' }}
               >
                 <Download size={14} /> Export Inventory
@@ -235,7 +237,10 @@ export default function DashboardPage() {
                   <td style={{ padding: '1rem' }}>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button 
-                        onClick={() => generateInvoicePDF(row, row.home, exchangeRate)}
+                        onClick={async () => {
+                          const { generateInvoicePDF } = await import('@/lib/reports');
+                          generateInvoicePDF(row, row.home, exchangeRate);
+                        }}
                         style={{ background: 'transparent', border: '1px solid #E2E8F0', padding: '0.4rem 0.6rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}
                       >
                         <FileText size={14} />

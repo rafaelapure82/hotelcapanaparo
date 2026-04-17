@@ -1,19 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { Settings, Bell, Shield, Globe, Save, Wallet } from 'lucide-react';
 import api from '@/lib/api';
 
 export default function SettingsPage() {
-  const { exchangeRate, setExchangeRate, t } = useLanguage();
+  const { exchangeRate, updateRate, t } = useLanguage();
   const [rate, setRate] = useState(exchangeRate.toString());
   const [success, setSuccess] = useState(false);
 
+  useEffect(() => {
+    setRate(exchangeRate.toString());
+  }, [exchangeRate]);
+
   const handleSave = async () => {
     try {
-      await api.patch('/settings/exchange-rate', { rate: parseFloat(rate) });
-      setExchangeRate(parseFloat(rate));
+      await updateRate(parseFloat(rate));
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (e) {

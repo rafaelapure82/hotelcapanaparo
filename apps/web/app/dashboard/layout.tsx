@@ -13,7 +13,9 @@ import {
   LogOut,
   ChevronRight,
   User,
-  UserCircle
+  UserCircle,
+  MessageSquare,
+  Package
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
@@ -22,8 +24,12 @@ import api from '@/lib/api';
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { exchangeRate, setExchangeRate, formatPrice, t } = useLanguage();
+  const { exchangeRate, updateRate, formatPrice, t } = useLanguage();
   const [newRate, setNewRate] = useState(exchangeRate.toString());
+
+  useEffect(() => {
+    setNewRate(exchangeRate.toString());
+  }, [exchangeRate]);
   const [updatingRate, setUpdatingRate] = useState(false);
 
   const isAdmin = user?.roles.includes('admin');
@@ -31,7 +37,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const menuItems = [
     { name: t('dashboard'), icon: LayoutDashboard, path: '/dashboard', roles: ['admin', 'partner'] },
     { name: t('bookings'), icon: CalendarDays, path: '/dashboard/reservations', roles: ['admin', 'partner'] },
+    { name: t('messages'), icon: MessageSquare, path: '/dashboard/messages', roles: ['admin', 'partner'] },
     { name: t('myProperties'), icon: Home, path: '/dashboard/rooms', roles: ['admin', 'partner'] },
+    { name: t('inventory'), icon: Package, path: '/dashboard/inventory', roles: ['admin', 'partner'] },
     { name: t('earnings'), icon: TrendingUp, path: '/dashboard/financials', roles: ['admin'] },
     { name: t('Reviews'), icon: CheckCircle, path: '/dashboard/reviews', roles: ['admin', 'partner'] },
     { name: 'Perfil', icon: UserCircle, path: '/dashboard/profile', roles: ['admin', 'partner'] },
@@ -45,8 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const handleUpdateRate = async () => {
     setUpdatingRate(true);
     try {
-      await api.patch('/settings/exchange-rate', { rate: parseFloat(newRate) });
-      setExchangeRate(parseFloat(newRate));
+      await updateRate(parseFloat(newRate));
     } catch (err) {
       console.error('Failed to update rate', err);
     } finally {

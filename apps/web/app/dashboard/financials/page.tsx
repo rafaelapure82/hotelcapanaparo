@@ -30,6 +30,17 @@ export default function FinancialsPage() {
           <p style={{ color: 'var(--secondary)', fontWeight: 600 }}>Balance general de ingresos, conversiones y reportes fiscales.</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
+          <Link 
+            href="/dashboard/financials/invoices"
+            style={{ 
+              background: 'white', color: 'var(--primary)', border: '1px solid var(--primary)', 
+              padding: '0.8rem 1.5rem', borderRadius: '12px', fontWeight: 800, 
+              display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer',
+              textDecoration: 'none'
+            }}
+          >
+            <FileText size={18} /> Libro de Facturas
+          </Link>
           <button 
             onClick={() => window.open(`${api.defaults.baseURL}/stats/export-revenue`, '_blank')}
             style={{ 

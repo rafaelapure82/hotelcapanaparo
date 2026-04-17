@@ -112,6 +112,21 @@ model Booking {
 
   buyer           User     @relation("UserBookings", fields: [buyerId], references: [id])
   home            Home?    @relation("HomeBookings", fields: [serviceId], references: [id])
+  invoice         Invoice?
+}
+
+model Invoice {
+  id              Int      @id @default(autoincrement())
+  number          String   @unique // Format: YYYYMMDD-XXXX
+  bookingId       Int      @unique
+  amountUSD       Float
+  amountVES       Float
+  exchangeRate    Float
+  status          String   @default("paid") // paid, pending, cancelled
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  booking         Booking  @relation(fields: [bookingId], references: [id])
 }
 
 model Review {
@@ -140,6 +155,8 @@ model Message {
   senderId  Int
   receiverId Int
   bookingId Int?
+  isRead    Boolean  @default(false)
+  attachmentUrl String? @db.Text
   createdAt DateTime @default(now())
 
   sender    User     @relation("SentMessages", fields: [senderId], references: [id])
@@ -148,11 +165,40 @@ model Message {
 
 model InventoryRecord {
   id          Int      @id @default(autoincrement())
+  sku         String   @unique @db.VarChar(50)
   item        String   @db.VarChar(100)
+  imageUrl    String?  @db.Text
+  supplier    String?  @db.VarChar(100)
   quantity    Int      @default(0)
+  unit        String   @default("und") @db.VarChar(20)
+  minStock    Int      @default(5)
+  costPrice   Float    @default(0)
   status      String   @default("ok") // ok, low, out
+  categoryId  Int?
   homeId      Int?
   updatedAt   DateTime @updatedAt
+
+  category     InventoryCategory? @relation(fields: [categoryId], references: [id])
+  transactions InventoryTransaction[]
+}
+
+model InventoryCategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(50)
+  icon      String?  @db.VarChar(50) @default("Package")
+  records   InventoryRecord[]
+}
+
+model InventoryTransaction {
+  id          Int      @id @default(autoincrement())
+  recordId    Int
+  type        String   @db.VarChar(20) // IN, OUT, ADJUST
+  quantity    Int
+  reason      String   @db.VarChar(255) // Purchase, Usage, Damage, Loss, Initial
+  userId      Int?
+  createdAt   DateTime @default(now())
+
+  record      InventoryRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
 }
 
 

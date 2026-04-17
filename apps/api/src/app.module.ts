@@ -10,6 +10,8 @@ import { StatsModule } from './stats/stats.module';
 import { SettingsModule } from './settings/settings.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { ChatModule } from './chat/chat.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { InvoicesModule } from './invoices/invoices.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
@@ -24,6 +26,8 @@ import { join } from 'path';
     SettingsModule,
     UploadsModule,
     ChatModule,
+    InventoryModule,
+    InvoicesModule,
     ServeStaticModule.forRoot({
 
       rootPath: join(__dirname, '..', 'public'),
