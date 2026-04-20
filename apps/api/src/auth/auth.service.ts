@@ -38,19 +38,30 @@ export class AuthService {
   }
 
   async register(data: any) {
-    const hashedPassword = await bcrypt.hash(data.password, 10);
-    const user = await this.usersService.create({
-      email: data.email,
-      password: hashedPassword,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      roles: {
-        connect: [{ slug: 'guest' }]
+    try {
+      const hashedPassword = await bcrypt.hash(data.password, 10);
+      const user = await this.usersService.create({
+        email: data.email,
+        password: hashedPassword,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        roles: {
+          connect: [{ slug: 'guest' }]
+        }
+      });
+      
+      // Auto-login after registration
+      return this.login(user);
+    } catch (error) {
+      console.error('Registration error:', error);
+      if (error.code === 'P2002') {
+        throw new UnauthorizedException('El correo electrónico ya está registrado');
       }
-    });
-    
-    // Auto-login after registration
-    return this.login(user);
+      if (error.code === 'P2025') {
+        throw new Error('Error de configuración del sistema: Role "guest" no encontrado. Por favor ejecute el seed.');
+      }
+      throw error;
+    }
   }
 }
 

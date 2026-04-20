@@ -13,8 +13,18 @@ export class UsersService {
     });
   }
 
+  async findById(id: number): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: { roles: true },
+    });
+  }
+
   async create(data: Prisma.UserCreateInput): Promise<User> {
-    return this.prisma.user.create({ data });
+    return this.prisma.user.create({ 
+      data,
+      include: { roles: true }
+    });
   }
 
   async update(id: number, data: Prisma.UserUpdateInput): Promise<User> {

@@ -2,7 +2,7 @@ export const generateInvoicePDF = async (booking: any, suite: any, exchangeRate:
   if (typeof window === 'undefined') return;
   // Dynamic import to avoid SSR errors with jsPDF
   const { default: jsPDF } = await import('jspdf');
-  await import('jspdf-autotable');
+  const { default: autoTable } = await import('jspdf-autotable');
   
   const doc = new jsPDF() as any;
   const companyLogo = '🏨';
@@ -45,7 +45,7 @@ export const generateInvoicePDF = async (booking: any, suite: any, exchangeRate:
   const currentRate = officialInvoice?.exchangeRate || exchangeRate;
   const totalVES = officialInvoice?.amountVES || (totalUSD * currentRate);
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: 95,
     head: [['Descripción', 'Tasa Ref.', 'Monto ($)', 'Monto (Bs)']],
     body: [
@@ -78,7 +78,7 @@ export const generateInvoicePDF = async (booking: any, suite: any, exchangeRate:
   doc.setTextColor(150);
   doc.text('Estado de Pago:', 20, finalY + 10);
   doc.setFontSize(12);
-  doc.setTextColor([22, 101, 52]); // Success green for invoices
+  doc.setTextColor(22, 101, 52); // Success green for invoices
   doc.text('CONFIRMADO / PAGADO', 20, finalY + 18);
 
   // Save
@@ -89,7 +89,7 @@ export const generateInvoicePDF = async (booking: any, suite: any, exchangeRate:
 export const generateInventoryReport = async (items: any[]) => {
   if (typeof window === 'undefined') return;
   const { default: jsPDF } = await import('jspdf');
-  await import('jspdf-autotable');
+  const { default: autoTable } = await import('jspdf-autotable');
   const doc = new jsPDF() as any;
   
   doc.setFontSize(20);
@@ -100,7 +100,7 @@ export const generateInventoryReport = async (items: any[]) => {
   doc.setTextColor(100);
   doc.text(`Generado el: ${new Date().toLocaleString()}`, 105, 28, { align: 'center' });
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: 40,
     head: [['SKU', 'Artículo', 'Categoría', 'Proveedor', 'Precio Costo', 'Existencia', 'Estado']],
     body: items.map(p => [
@@ -117,4 +117,94 @@ export const generateInventoryReport = async (items: any[]) => {
   });
 
   doc.save(`Reporte_Inventario_${new Date().toISOString().split('T')[0]}.pdf`);
+};
+
+export const generateBIReport = async (data: any, timeframe: string) => {
+  if (typeof window === 'undefined') return;
+  const { default: jsPDF } = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
+  const doc = new jsPDF() as any;
+
+  // Header and Branding
+  doc.setFontSize(22);
+  doc.setTextColor(46, 196, 182);
+  doc.text('REPORTE BI ESTRATÉGICO', 105, 20, { align: 'center' });
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(`Hotel Capanaparo Suites | Periodo: ${timeframe.toUpperCase()}`, 105, 28, { align: 'center' });
+  doc.text(`Fecha de Generación: ${new Date().toLocaleString()}`, 105, 33, { align: 'center' });
+
+  // 1. Projections Summary Table
+  doc.setFontSize(14);
+  doc.setTextColor(0);
+  doc.text('Resumen de Proyecciones de Ingresos', 20, 45);
+
+  autoTable(doc, {
+    startY: 50,
+    head: [['Periodo', 'Proyección de Ingresos ($)', 'Estatus Salud']],
+    body: [
+      ['Semanal', `$${(data.projections.weekly[0]?.total || 0).toFixed(2)}`, 'ÓPTIMO'],
+      ['Mensual', `$${(data.projections.monthly[0]?.total || 0).toFixed(2)}`, 'ESTABLE'],
+      ['Anual', `$${(data.projections.yearly[0]?.total || 0).toFixed(2)}`, 'PROYECTADO'],
+    ],
+    headStyles: { fillColor: [46, 196, 182], textColor: 255 },
+    alternateRowStyles: { fillColor: [245, 255, 255] },
+  });
+
+  // 2. Profitability Details
+  const finalY1 = (doc as any).lastAutoTable.finalY + 15;
+  doc.text('Índice de Rentabilidad por Categoría', 20, finalY1);
+
+  autoTable(doc, {
+    startY: finalY1 + 5,
+    head: [['Categoría', 'Ingresos ($)', 'Costos ($)', 'Margen (%)']],
+    body: data.profitability.map((p: any) => [
+      p.name,
+      `$${p.ingresos.toFixed(2)}`,
+      `$${p.costos.toFixed(2)}`,
+      `${p.margen.toFixed(1)}%`
+    ]),
+    headStyles: { fillColor: [255, 159, 28], textColor: 255 }, // Accent color
+  });
+
+  // 3. Operational Pulse
+  const finalY2 = (doc as any).lastAutoTable.finalY + 15;
+  doc.text('Pulso Operativo y Eficiencia', 20, finalY2);
+  
+  doc.setFontSize(11);
+  doc.text(`Eficiencia Global: ${data.operational.efficiencyScore}`, 20, finalY2 + 10);
+  doc.text(`Tiempo Promedio de Limpieza: ${data.operational.avgCleaningTime} min`, 20, finalY2 + 18);
+  doc.text(`Tareas Completadas (Hoy): ${data.operational.tasksCompleted}`, 20, finalY2 + 26);
+
+  // Footer
+  doc.setFontSize(9);
+  doc.setTextColor(150);
+  doc.text('Confidencial - Propiedad de Hotel Capanaparo Suites. Producido por Motor BI "God-Level".', 105, 285, { align: 'center' });
+
+  doc.save(`Reporte_BI_${timeframe}_${new Date().toISOString().split('T')[0]}.pdf`);
+};
+
+export const exportInventoryToExcel = async (items: any[]) => {
+  if (typeof window === 'undefined') return;
+  const { utils, writeFile } = await import('xlsx');
+  
+  const data = items.map(item => ({
+    SKU: item.sku,
+    Artículo: item.item,
+    Categoría: item.category?.name || 'Suministro',
+    Proveedor: item.supplier || 'N/A',
+    Existencia: item.quantity,
+    Unidad: item.unit,
+    Precio_Costo_USD: item.costPrice,
+    Valor_Total_Inver_USD: (item.quantity * item.costPrice).toFixed(2),
+    Estado: item.status.toUpperCase(),
+    Ultima_Actualizacion: new Date(item.updatedAt).toLocaleString()
+  }));
+
+  const worksheet = utils.json_to_sheet(data);
+  const workbook = utils.book_new();
+  utils.book_append_sheet(workbook, worksheet, 'Inventario');
+
+  writeFile(workbook, `Inventario_Hotel_${new Date().toISOString().split('T')[0]}.xlsx`);
 };

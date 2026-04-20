@@ -1,10 +1,11 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(private usersService: UsersService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -13,6 +14,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    return { userId: payload.sub, email: payload.email, roles: payload.roles };
+    const userId = Number(payload.sub);
+    let roles = payload.roles;
+
+    // Fallback for stale tokens missing roles
+    if (!roles || roles.length === 0) {
+      const user = await this.usersService.findById(userId);
+      roles = (user as any)?.roles?.map((r: any) => r.slug) || [];
+    }
+
+    return { userId, email: payload.email, roles };
   }
 }

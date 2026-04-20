@@ -10,14 +10,22 @@ export class ChatService {
       where: { bookingId },
       orderBy: { createdAt: 'asc' },
       include: {
-        sender: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            avatar: true,
-          },
-        },
+        sender: { select: { id: true, firstName: true, avatarUrl: true } },
+      },
+    });
+  }
+
+  async getMessagesBetweenUsers(userId1: number, userId2: number) {
+    return this.prisma.message.findMany({
+      where: {
+        OR: [
+          { senderId: userId1, receiverId: userId2 },
+          { senderId: userId2, receiverId: userId1 },
+        ],
+      },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        sender: { select: { id: true, firstName: true, avatarUrl: true } },
       },
     });
   }

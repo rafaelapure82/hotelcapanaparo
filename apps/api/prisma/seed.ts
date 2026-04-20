@@ -37,6 +37,16 @@ async function main() {
     },
   });
 
+  const staffRole = await prisma.role.upsert({
+    where: { slug: 'staff-limpieza' },
+    update: {},
+    create: {
+      slug: 'staff-limpieza',
+      name: 'Staff de Limpieza',
+      permissions: 'view_tasks,update_task_status',
+    },
+  });
+
 
   console.log('Roles created.');
 
@@ -71,7 +81,7 @@ async function main() {
       numberOfBathrooms: 1,
       city: 'Apure',
       country: 'Venezuela',
-      amenities: 'Wifi, A/C, Jacuzzi, Breakfast',
+      amenities: ['Wifi', 'A/C', 'Jacuzzi', 'Breakfast'],
       homeType: 'Suite',
     },
     {
@@ -85,7 +95,7 @@ async function main() {
       numberOfBathrooms: 1,
       city: 'Apure',
       country: 'Venezuela',
-      amenities: 'Wifi, A/C, Desk, TV',
+      amenities: ['Wifi', 'A/C', 'Desk', 'TV'],
       homeType: 'Junior Suite',
     },
     {
@@ -99,7 +109,7 @@ async function main() {
       numberOfBathrooms: 1,
       city: 'Apure',
       country: 'Venezuela',
-      amenities: 'Wifi, A/C, Workstation',
+      amenities: ['Wifi', 'A/C', 'Workstation'],
       homeType: 'Standard',
     },
   ];

@@ -96,3 +96,67 @@ a {
   transform: translateY(-1px);
   box-shadow: var(--shadow-lg);
 }
+
+/* Secondary Button */
+.btn-secondary {
+  background: var(--dominant);
+  color: var(--primary);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-secondary:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Selection color */
+::selection {
+  background: var(--dominant);
+  color: var(--primary);
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .hide-mobile { display: none !important; }
+  
+  h1 { font-size: clamp(1.5rem, 5vw, 2.5rem) !important; }
+  
+  table {
+    font-size: 0.8rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .hide-desktop { display: none !important; }
+}
+
+/* Print styles */
+@media print {
+  nav, .btn-primary, .btn-secondary, button {
+    display: none !important;
+  }
+  body {
+    background: white;
+    color: black;
+  }
+}

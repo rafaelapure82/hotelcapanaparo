@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Patch, UseGuards, Req } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('inventory')
+@UseGuards(JwtAuthGuard)
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
@@ -31,17 +33,37 @@ export class InventoryController {
   }
 
   @Post()
-  create(@Body() data: any) {
-    return this.inventoryService.create(data);
+  create(@Body() data: any, @Req() req: any) {
+    return this.inventoryService.create({ ...data, userId: req.user.id });
+  }
+
+  @Get('rules')
+  getConsumptionRules() {
+    return this.inventoryService.getConsumptionRules();
+  }
+
+  @Post('rules')
+  createConsumptionRule(@Body() data: any) {
+    return this.inventoryService.createConsumptionRule(data);
+  }
+
+  @Get('bookings/:bookingId/consumption')
+  calculateBookingConsumption(@Param('bookingId') bookingId: string) {
+    return this.inventoryService.calculateBookingConsumption(+bookingId);
+  }
+
+  @Post('bookings/:bookingId/confirm-consumption')
+  confirmBookingConsumption(@Param('bookingId') bookingId: string, @Req() req: any) {
+    return this.inventoryService.confirmBookingConsumption(+bookingId, req.user.id);
   }
 
   @Patch(':id/stock')
-  updateStock(@Param('id') id: string, @Body() data: { quantity?: number; adjustment?: number; type: string; reason: string }) {
-    return this.inventoryService.updateStock(+id, data);
+  updateStock(@Param('id') id: string, @Body() data: { quantity?: number; adjustment?: number; type: string; reason: string; bookingId?: number }, @Req() req: any) {
+    return this.inventoryService.updateStock(+id, req.user.id, data);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.inventoryService.remove(+id);
+  remove(@Param('id') id: string, @Req() req: any) {
+    return this.inventoryService.remove(+id, req.user.id);
   }
 }

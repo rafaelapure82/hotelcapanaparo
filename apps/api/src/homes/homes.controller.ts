@@ -79,8 +79,8 @@ export class HomesController {
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'partner')
-  async update(@Param('id') id: string, @Body() data: any) {
-    return this.homesService.update(+id, data);
+  async update(@Param('id') id: string, @Body() data: any, @Request() req: any) {
+    return this.homesService.update(+id, data, req.user.userId);
   }
 
   @Delete(':id')
@@ -98,6 +98,16 @@ export class HomesController {
     @Query('end') end: string,
   ) {
     return this.homesService.checkAvailability(+id, new Date(start), new Date(end));
+  }
+
+  @Get(':id/calendar')
+  async getPropertyCalendar(@Param('id') id: string) {
+    // Returns booked dates for the next 90 days
+    const now = new Date();
+    const future = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+    
+    const bookings = await this.homesService.getBookedRanges(+id, now, future);
+    return bookings;
   }
 
   @Get('calendar/data')

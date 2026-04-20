@@ -75,7 +75,19 @@ export default function PropertiesListPage() {
                     }}>
                       {property.gallery && (
                         <img 
-                          src={property.gallery.split(',')[0].startsWith('/public') ? `http://localhost:3000${property.gallery.split(',')[0]}` : property.gallery.split(',')[0]} 
+                          src={(() => {
+                            let first = '';
+                            try {
+                              const p = JSON.parse(property.gallery);
+                              first = Array.isArray(p) ? p[0] : p;
+                            } catch {
+                              first = property.gallery.split(',')[0]?.trim();
+                            }
+                            if (!first) return '';
+                            if (first.startsWith('http')) return first;
+                            const path = first.startsWith('/') ? first : `/${first}`;
+                            return `http://localhost:3000${path}`;
+                          })()} 
                           alt="" 
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                         />

@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
+import { AuditService } from '../common/audit.service';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
@@ -9,6 +10,7 @@ export class InvoicesService {
   constructor(
     private prisma: PrismaService,
     private settingsService: SettingsService,
+    private audit: AuditService,
   ) {}
 
   async generateInvoiceNumber(): Promise<string> {
@@ -35,7 +37,7 @@ export class InvoicesService {
   async createFromBooking(bookingId: number) {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
-      include: { home: true },
+      include: { home: true, invoice: true },
     });
 
     if (!booking) throw new BadRequestException('Booking not found');
@@ -46,7 +48,7 @@ export class InvoicesService {
     const amountVES = amountUSD * rate;
     const number = await this.generateInvoiceNumber();
 
-    return this.prisma.invoice.create({
+    const invoice = await this.prisma.invoice.create({
       data: {
         number,
         bookingId: booking.id,
@@ -56,6 +58,17 @@ export class InvoicesService {
         status: 'paid',
       },
     });
+
+    await this.audit.log({
+      userId: booking.ownerId, // Typically logged as system or the owner managing it
+      action: 'CREATE_INVOICE',
+      entity: 'Invoice',
+      entityId: invoice.id,
+      newData: { number, amountUSD, status: 'paid' },
+      details: `Factura generada automáticamente para reserva #${booking.id}`
+    });
+
+    return invoice;
   }
 
   async generatePDFBuffer(booking: any, invoice: any): Promise<Buffer> {

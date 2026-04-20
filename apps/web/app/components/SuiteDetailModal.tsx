@@ -35,20 +35,33 @@ export default function SuiteDetailModal({ suite, onClose }: SuiteDetailModalPro
 
   const parseAmenities = (amenities: any) => {
     if (!amenities) return [];
+    if (Array.isArray(amenities)) return amenities;
+    
     try {
-      const parsed = JSON.parse(amenities);
+      const parsed = typeof amenities === 'string' ? JSON.parse(amenities) : amenities;
       return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
-      return amenities.split(',').map((a: string) => a.trim().toLowerCase());
+      return typeof amenities === 'string' ? amenities.split(',').map((a: string) => a.trim().toLowerCase()) : [];
     }
   };
 
   const suiteAmenities = parseAmenities(suite.amenities);
 
-  const getImageUrl = (imagePath: string) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http')) return imagePath;
-    return `http://localhost:3000${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
+  const getImageUrl = () => {
+    if (!suite?.gallery) return null;
+    
+    let firstImage = '';
+    try {
+      const parsed = JSON.parse(suite.gallery);
+      firstImage = Array.isArray(parsed) ? parsed[0] : parsed;
+    } catch {
+      firstImage = suite.gallery.split(',')[0]?.trim();
+    }
+
+    if (!firstImage) return null;
+    if (firstImage.startsWith('http')) return firstImage;
+    const path = firstImage.startsWith('/') ? firstImage : `/${firstImage}`;
+    return `http://localhost:3000${path}`;
   };
 
   const calculateTotal = () => {
@@ -134,7 +147,7 @@ export default function SuiteDetailModal({ suite, onClose }: SuiteDetailModalPro
         {/* Left: Room Showcase */}
         <div style={{ flex: 1, position: 'relative', background: '#022b3a' }}>
           <img 
-            src={getImageUrl(suite.gallery?.split(',')[0]) || ''} 
+            src={getImageUrl() || ''} 
             alt={suite.title} 
             style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} 
           />

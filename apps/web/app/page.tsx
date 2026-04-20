@@ -103,7 +103,23 @@ export default function Home() {
                 title={home.title} 
                 location={`${home.city}, ${home.country}`} 
                 price={home.basePrice} 
-                image={home.gallery?.split(',')[0]}
+                image={(() => {
+                  if (!home.gallery) return null;
+                  try {
+                    const parsed = JSON.parse(home.gallery);
+                    const first = Array.isArray(parsed) ? parsed[0] : parsed;
+                    if (!first) return null;
+                    if (first.startsWith('http')) return first;
+                    const path = first.startsWith('/') ? first : `/${first}`;
+                    return `http://localhost:3000${path}`;
+                  } catch {
+                    const first = home.gallery.split(',')[0]?.trim();
+                    if (!first) return null;
+                    if (first.startsWith('http')) return first;
+                    const path = first.startsWith('/') ? first : `/${first}`;
+                    return `http://localhost:3000${path}`;
+                  }
+                })()}
                 isFeatured={home.isFeatured}
                 viewCount={home.viewCount}
                 amenities={home.amenities}

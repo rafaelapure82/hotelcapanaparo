@@ -102,6 +102,13 @@ const translations: Translations = {
   saveChanges: { es: 'Guardar Cambios', en: 'Save Changes', it: 'Salva Modifiche', pt: 'Salvar Alterações', fr: 'Enregistrer les modifications', de: 'Änderungen Speichern' },
   deleteConfirm: { es: '¿Estás seguro de eliminar esta suite?', en: 'Are you sure you want to delete this suite?', it: 'Sei sicuro di voler eliminare questa suite?', pt: 'Tem certeza que deseja excluir esta suíte?', fr: 'Êtes-vous sûr de vouloir supprimer cette suite ?', de: 'Sind Sie sicher, dass Sie diese Suite löschen möchten?' },
   
+  // Statuses
+  confirmed: { es: 'Confirmada', en: 'Confirmed', it: 'Confermata', pt: 'Confirmada', fr: 'Confirmée', de: 'Bestätigt' },
+  processing: { es: 'En Proceso', en: 'Processing', it: 'In Lavorazione', pt: 'Em Processamento', fr: 'En Cours', de: 'In Bearbeitung' },
+  pending: { es: 'Pendiente', en: 'Pending', it: 'In Sospeso', pt: 'Pendente', fr: 'En Attente', de: 'Ausstehend' },
+  cancelled: { es: 'Cancelada', en: 'Cancelled', it: 'Annullata', pt: 'Cancelada', fr: 'Annulée', de: 'Storniert' },
+  active: { es: 'Activa', en: 'Active', it: 'Attiva', pt: 'Ativa', fr: 'Active', de: 'Aktiv' },
+  
   // Amenities
   wifi: { es: 'WiFi Gratis', en: 'Free WiFi', it: 'WiFi Gratuito', pt: 'WiFi Grátis', fr: 'WiFi Gratuit', de: 'Gratis WLAN' },
   ac: { es: 'Aire Acondicionado', en: 'Air Conditioning', it: 'Aria Condizionata', pt: 'Ar Condicionado', fr: 'Climatisation', de: 'Klimaanlage' },

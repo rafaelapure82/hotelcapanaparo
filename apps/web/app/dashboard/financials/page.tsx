@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import api from '@/lib/api';
 import { useLanguage } from '@/context/LanguageContext';
-import { DollarSign, Download, TrendingUp, ArrowRight, Wallet } from 'lucide-react';
+import { DollarSign, Download, TrendingUp, ArrowRight, Wallet, FileText } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 export default function FinancialsPage() {

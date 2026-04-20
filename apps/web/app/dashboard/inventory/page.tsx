@@ -16,6 +16,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import api from '@/lib/api';
 import { InventoryStats } from './components/InventoryComponents';
 import { InventoryDetailModal, AdjustStockModal, NewItemModal } from './components/InventoryModals';
+import { ConsumptionRuleModal } from './components/ConsumptionRuleModal';
 
 export default function InventoryPage() {
   const { formatPrice } = useLanguage();
@@ -25,6 +26,7 @@ export default function InventoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [adjustingItem, setAdjustingItem] = useState<any>(null);
+  const [rulingItem, setRulingItem] = useState<any>(null);
   const [isNewItemModalOpen, setIsNewItemModalOpen] = useState(false);
 
   useEffect(() => {
@@ -64,8 +66,8 @@ export default function InventoryPage() {
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             <button 
               onClick={async () => {
-                const { generateInventoryReport } = await import('@/lib/reports');
-                generateInventoryReport(items);
+                const { exportInventoryToExcel } = await import('@/lib/reports');
+                exportInventoryToExcel(items);
               }}
               style={{ background: 'white', border: '1px solid #E2E8F0', padding: '0.8rem 1.5rem', borderRadius: '16px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', height: '48px' }}
             >
@@ -175,6 +177,9 @@ export default function InventoryPage() {
                      <button onClick={() => setAdjustingItem(item)} style={{ padding: '0.6rem 1rem', background: 'var(--primary)', border: 'none', borderRadius: '10px', color: 'white', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                         <Settings2 size={16} /> Ajustar
                      </button>
+                     <button onClick={() => setRulingItem(item)} style={{ padding: '0.6rem', background: 'var(--dominant)', border: '1px solid var(--primary-light)', borderRadius: '10px', cursor: 'pointer', color: 'var(--primary)' }} title="Reglas de Consumo">
+                        <ListIcon size={18} />
+                     </button>
                   </div>
                 </td>
               </tr>
@@ -193,6 +198,10 @@ export default function InventoryPage() {
 
       {isNewItemModalOpen && (
         <NewItemModal onClose={() => setIsNewItemModalOpen(false)} onCreated={fetchData} />
+      )}
+
+      {rulingItem && (
+        <ConsumptionRuleModal item={rulingItem} onClose={() => setRulingItem(null)} />
       )}
 
     </div>

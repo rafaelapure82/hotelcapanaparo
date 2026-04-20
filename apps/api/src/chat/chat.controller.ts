@@ -10,6 +10,17 @@ export class ChatController {
     return this.chatService.getMessagesByBooking(parseInt(bookingId));
   }
 
+  @Get('history/:user1Id/:user2Id')
+  async getUserHistory(
+    @Param('user1Id') user1Id: string,
+    @Param('user2Id') user2Id: string,
+  ) {
+    return this.chatService.getMessagesBetweenUsers(
+      parseInt(user1Id),
+      parseInt(user2Id),
+    );
+  }
+
   @Get('conversations/:userId')
   async getConversations(@Param('userId') userId: string) {
     return this.chatService.getConversations(parseInt(userId));

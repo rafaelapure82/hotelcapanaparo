@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditService } from '../common/audit.service';
 import { Home, Prisma } from '@prisma/client';
 
 @Injectable()
 export class HomesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private audit: AuditService,
+  ) {}
 
   async findAll(params: {
     skip?: number;
@@ -19,7 +23,10 @@ export class HomesService {
   async findOne(id: number): Promise<Home | null> {
     const home = await this.prisma.home.findUnique({
       where: { id },
-      include: { author: true },
+      include: { 
+        author: true,
+        _count: { select: { reviews: true } }
+      },
     });
     if (!home) throw new NotFoundException('Home not found');
     return home;
@@ -29,11 +36,27 @@ export class HomesService {
     return this.prisma.home.create({ data });
   }
 
-  async update(id: number, data: Prisma.HomeUpdateInput): Promise<Home> {
-    return this.prisma.home.update({
+  async update(id: number, data: Prisma.HomeUpdateInput, userId?: number): Promise<Home> {
+    const prevData = await this.prisma.home.findUnique({ where: { id } });
+    
+    const updated = await this.prisma.home.update({
       where: { id },
       data,
     });
+
+    if (userId) {
+      await this.audit.log({
+        userId,
+        action: 'UPDATE_HOME',
+        entity: 'Home',
+        entityId: id,
+        prevData,
+        newData: data,
+        details: data.basePrice ? `Precio cambiado a ${data.basePrice}` : 'Actualización de propiedad'
+      });
+    }
+
+    return updated;
   }
 
   async remove(id: number): Promise<Home> {
@@ -76,5 +99,25 @@ export class HomesService {
         },
       },
     });
+  }
+
+  async getBookedRanges(homeId: number, from: Date, to: Date) {
+    const bookings = await this.prisma.booking.findMany({
+      where: {
+        serviceId: homeId,
+        serviceType: 'home',
+        status: { in: ['confirmed', 'paid', 'processing'] },
+        startDate: { lte: to },
+        endDate: { gte: from },
+      },
+      select: {
+        startDate: true,
+        endDate: true,
+        status: true,
+      },
+      orderBy: { startDate: 'asc' }
+    });
+
+    return bookings;
   }
 }

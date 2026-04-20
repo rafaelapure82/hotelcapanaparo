@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface HomeCardPremiumProps {
@@ -105,14 +106,15 @@ export default function HomeCardPremium({ id, title, price, location, rating = 9
 
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--secondary)', fontWeight: 600 }}>{t('freeCancellation') || 'Cancelación Gratuita'}</span>
-          <button 
-            onClick={(e) => { e.stopPropagation(); onView?.(); }}
-            className="btn-primary" 
-            style={{ padding: '0.5rem 1.25rem', borderRadius: '12px', fontSize: '0.9rem' }}
-          >
-            {t('viewSuite')}
-          </button>
-
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Link 
+              href={`/homes/${id}`}
+              className="btn-primary" 
+              style={{ padding: '0.5rem 1.25rem', borderRadius: '12px', fontSize: '0.9rem' }}
+            >
+              {t('viewSuite')}
+            </Link>
+          </div>
         </div>
       </div>
 

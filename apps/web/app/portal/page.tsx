@@ -81,11 +81,15 @@ export default function GuestPortalPage() {
                   borderRadius: '50px', 
                   fontSize: '0.75rem', 
                   fontWeight: 800,
-                  background: booking.status === 'confirmed' ? '#d1fae5' : '#fef3c7',
-                  color: booking.status === 'confirmed' ? '#065f46' : '#92400e',
+                  background: booking.status === 'confirmed' ? '#d1fae5' : 
+                             booking.status === 'processing' ? '#dbeafe' :
+                             booking.status === 'cancelled' ? '#fee2e2' : '#fef3c7',
+                  color: booking.status === 'confirmed' ? '#065f46' : 
+                         booking.status === 'processing' ? '#1e40af' :
+                         booking.status === 'cancelled' ? '#991b1b' : '#92400e',
                   textTransform: 'uppercase'
                 }}>
-                  {booking.status}
+                  {t(booking.status)}
                 </span>
                 <Link href={`/homes/${booking.serviceId}`} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>{t('viewSuite')}</Link>
               </div>

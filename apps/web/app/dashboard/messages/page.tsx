@@ -7,7 +7,7 @@ import api from '@/lib/api';
 import Cookies from 'js-cookie';
 
 export default function MessagesPage() {
-  const { messages, sendMessage, sendTyping, joinChat, markAsRead, typingUsers } = useChat();
+  const { messages, sendMessage, sendTyping, joinChat, markAsRead, typingUsers, loadHistory } = useChat();
   const [conversations, setConversations] = useState<any[]>([]);
   const [activeChat, setActiveChat] = useState<any>(null);
   const [newMessage, setNewMessage] = useState('');
@@ -17,13 +17,15 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (activeChat) {
-      loadHistory(activeChat.lastMessage.bookingId || 0); // Load history based on booking or general (0)
-      markAsRead(activeChat.otherUser.id);
+      loadHistory(activeChat.lastMessage?.bookingId || 0); // Load history based on booking or general (0)
+      if (activeChat.otherUser.id !== 2) {
+        markAsRead(activeChat.otherUser.id);
+      }
     }
   }, [activeChat]);
 
   useEffect(() => {
-    const userStr = Cookies.get('user');
+    const userStr = localStorage.getItem('auth_user');
     if (userStr) {
       const user = JSON.parse(userStr);
       setCurrentUser(user);
@@ -48,7 +50,19 @@ export default function MessagesPage() {
   const fetchConversations = async (userId: number) => {
     try {
       const { data } = await api.get(`/chat/conversations/${userId}`);
-      setConversations(data);
+      
+      // Add CapaBot manually as the first conversation if not present
+      const hasBot = data.find((c: any) => c.otherUser.id === 2);
+      const enrichedData = hasBot ? data : [
+        {
+          otherUser: { id: 2, firstName: 'CapaBot', avatarUrl: null, roles: ['ai'] },
+          lastMessage: { content: '¡Hola! Soy tu asistente virtual.', createdAt: new Date().toISOString() },
+          unreadCount: 0
+        },
+        ...data
+      ];
+      
+      setConversations(enrichedData);
     } catch (err) {
       console.error('Error fetching conversations', err);
     }
@@ -151,7 +165,10 @@ export default function MessagesPage() {
                   {activeChat.otherUser.avatarUrl ? <img src={activeChat.otherUser.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <User size={20} style={{ color: 'var(--secondary)', display: 'block', margin: '10px auto' }} />}
                 </div>
                 <div>
-                  <h3 style={{ fontWeight: 800, fontSize: '1rem' }}>{activeChat.otherUser.firstName}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <h3 style={{ fontWeight: 800, fontSize: '1rem' }}>{activeChat.otherUser.firstName}</h3>
+                    {activeChat.otherUser.id === 2 && <span style={{ background: 'var(--primary)', color: 'white', padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.6rem', fontWeight: 900 }}>IA</span>}
+                  </div>
                   <span style={{ fontSize: '0.75rem', color: typingUsers.has(activeChat.otherUser.id) ? 'var(--primary)' : 'var(--secondary)', fontWeight: 700 }}>
                     {typingUsers.has(activeChat.otherUser.id) ? 'Escribiendo...' : 'En línea'}
                   </span>

@@ -33,6 +33,22 @@ model User {
   reviews              Review[]
   sentMessages         Message[] @relation("SentMessages")
   receivedMessages     Message[] @relation("ReceivedMessages")
+  auditLogs            AuditLog[]
+  assignedTasks        HousekeepingTask[] @relation("StaffTasks")
+  notifications        Notification[]
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String   // info, warning, success, error, handoff
+  title     String
+  message   String   @db.Text
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 
@@ -60,28 +76,38 @@ model Home {
   city              String?   @db.VarChar(50)
   country           String?   @db.VarChar(50)
   postcode          String?   @db.VarChar(15)
-  gallery           String?
+  gallery           String?   @db.Text // Can store JSON string of URLs
   thumbnailId       String?
-  numberOfGuest     Int?
+  maxGuests         Int?      @default(2)
   numberOfBedrooms   Int?
   numberOfBathrooms  Int?
-  size              Float?
+  size              Float?    // Square meters
   minStay           Int?
   maxStay           Int?
   bookingType       String?   @db.VarChar(20)
   basePrice         Float?
   weekendPrice      Float?
-  amenities         String?
+  amenities         Json?     // List of amenities (codes/names)
   homeType          String?
   status            String    @default("publish")
+  cleaningStatus    String    @default("ready") // ready, dirty, cleaning
   isFeatured        Boolean   @default(false)
   viewCount         Int       @default(0)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-
+  icalUrl           String?   @db.Text
+  externalCalendarUrl String? @db.Text
+  lastSync          DateTime?
+  bedType           String?   // e.g., "King Size"
+  
+  // Relations
   author            User      @relation("UserHomes", fields: [authorId], references: [id])
   bookings          Booking[] @relation("HomeBookings")
+  reviews           Review[]
+  housekeepingTasks HousekeepingTask[]
+  consumptionRules  InventoryConsumptionRule[]
+  extraConfigs      Json?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
 
 model Booking {
@@ -93,6 +119,7 @@ model Booking {
   firstName       String   @db.VarChar(100)
   lastName        String   @db.VarChar(100)
   email           String   @db.VarChar(100)
+  documentId      String?  @db.VarChar(50)
   phone           String   @db.VarChar(50)
   address         String?  @db.VarChar(255)
   buyerId         Int
@@ -106,13 +133,77 @@ model Booking {
   endDate         DateTime
   numberOfGuests  Int      @default(1)
   platform        String?  @default("Direct") // e.g., Direct, Booking.com
+  guestId         Int?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
 
   buyer           User     @relation("UserBookings", fields: [buyerId], references: [id])
   home            Home?    @relation("HomeBookings", fields: [serviceId], references: [id])
+  guest           Guest?   @relation(fields: [guestId], references: [id])
   invoice         Invoice?
+  inventoryTransactions InventoryTransaction[]
+  extras          ExtraCharge[]
+}
+
+model Guest {
+  id              Int       @id @default(autoincrement())
+  email           String    @unique
+  documentId      String    @unique // Cedula, DNI o Pasaporte
+  firstName       String
+  lastName        String
+  phone           String?
+  notes           String?   @db.Text
+  loyaltyStatus   String    @default("Regular") // Regular, Silver, Gold, Platinum
+  totalSpentPayed Float     @default(0)
+  totalStays      Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  bookings        Booking[]
+}
+
+model ExtraCharge {
+  id              Int      @id @default(autoincrement())
+  bookingId       Int
+  recordId        Int?     // Optional: Link to inventory if it consumes stock
+  name            String
+  quantity        Int      @default(1)
+  amount          Float    // Price per unit
+  total           Float    // quantity * amount
+  createdAt       DateTime @default(now())
+
+  booking         Booking  @relation(fields: [bookingId], references: [id])
+  record          InventoryRecord? @relation(fields: [recordId], references: [id])
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  action    String
+  entity    String
+  entityId  Int?
+  details   String?  @db.Text
+  prevData  Json?
+  newData   Json?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model HousekeepingTask {
+  id          Int       @id @default(autoincrement())
+  homeId      Int
+  status      String    @default("dirty") // dirty, cleaning, ready
+  priority    String    @default("medium")
+  assignedTo  Int?
+  notes       String?   @db.Text
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  home        Home      @relation(fields: [homeId], references: [id])
+  staff       User?     @relation("StaffTasks", fields: [assignedTo], references: [id])
 }
 
 model Invoice {
@@ -130,18 +221,26 @@ model Invoice {
 }
 
 model Review {
-  id        Int      @id @default(autoincrement())
-  serviceId Int
-  serviceType String
-  userId    Int
-  title     String?
-  content   String   @db.Text
-  rating    Float
-  status    String   @default("approved")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  serviceId     Int
+  serviceType   String   @default("home")
+  userId        Int
+  bookingId     Int?     @unique
+  title         String?
+  content       String   @db.Text
+  rating        Float
+  cleanliness   Float?   @default(0)
+  location      Float?   @default(0)
+  value         Float?   @default(0)
+  comfort       Float?   @default(0)
+  staff         Float?   @default(0)
+  ownerResponse String?  @db.Text
+  status        String   @default("approved")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  user      User     @relation(fields: [userId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
+  home          Home?    @relation(fields: [serviceId], references: [id])
 }
 
 model SystemSetting {
@@ -173,6 +272,7 @@ model InventoryRecord {
   unit        String   @default("und") @db.VarChar(20)
   minStock    Int      @default(5)
   costPrice   Float    @default(0)
+  salePrice   Float?   @default(0)
   status      String   @default("ok") // ok, low, out
   categoryId  Int?
   homeId      Int?
@@ -180,6 +280,8 @@ model InventoryRecord {
 
   category     InventoryCategory? @relation(fields: [categoryId], references: [id])
   transactions InventoryTransaction[]
+  consumptionRules InventoryConsumptionRule[]
+  extraCharges ExtraCharge[]
 }
 
 model InventoryCategory {
@@ -189,9 +291,24 @@ model InventoryCategory {
   records   InventoryRecord[]
 }
 
+model InventoryConsumptionRule {
+  id              Int      @id @default(autoincrement())
+  recordId        Int
+  homeId          Int?     // Optional: rule per home or global
+  qtyPerGuest     Float    @default(0)
+  qtyPerNight     Float    @default(0)
+  qtyPerBooking   Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  record          InventoryRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  home            Home?           @relation(fields: [homeId], references: [id])
+}
+
 model InventoryTransaction {
   id          Int      @id @default(autoincrement())
   recordId    Int
+  bookingId   Int?
   type        String   @db.VarChar(20) // IN, OUT, ADJUST
   quantity    Int
   reason      String   @db.VarChar(255) // Purchase, Usage, Damage, Loss, Initial
@@ -199,6 +316,7 @@ model InventoryTransaction {
   createdAt   DateTime @default(now())
 
   record      InventoryRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  booking     Booking?        @relation(fields: [bookingId], references: [id])
 }
 
 
